@@ -13,6 +13,16 @@ const colourjs = (function()
 
   let pos = 0;
   let code = '';
+
+  const reservedWords = ['await', 'break', 'case', 'catch', 'class', 'const',
+                         'continue', 'debugger', 'default', 'delete', 'do',
+                         'else', 'enum', 'export', 'extends', 'false',
+                         'finally', 'for', 'function', 'if', 'import', 'in',
+                         'instanceof', 'new', 'null', 'return', 'super',
+                         'switch', 'this', 'throw', 'true', 'try', 'typeof',
+                         'var', 'void', 'while', 'with', 'yield'];
+
+
   function RDP(code_in)
   {
     code = code_in;
@@ -199,9 +209,40 @@ const colourjs = (function()
         }
       }
     }
+
+    let value = parseInt(codePoint, 16);
+
+    if(value > 0x10FFFE)
+    {
+      throw new ParseFail(`The hexadecimal value ${codepoint} is too big to be a valid unicode character`);
+    }
+    
     return {r: result, cp: codepoint};
   }
 
+  function identifier(c, next)
+  {
+    let id = identifierName(c, next)
+
+    return {id: id, isValid: !reservedWords.includes(id)};
+  }
+
+  function identifierReference(c, next)
+  {
+    let id = '';
+    let isValid = true;
+    {id, isValid} = identifier(c, next);
+    if(!isValid)
+    {
+      if(id !== 'yield' && id !== 'await')
+      {
+        throw new ParseFail(`${id} is not a valid identifier, as it is a reserved word.`)
+      }
+    }
+
+    return id;
+  }
+  
   function identifierName(c, nextc)
   {
     let name = '';
