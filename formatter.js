@@ -10,7 +10,7 @@ const colourjs = (function()
   {
     return `Character number ${pos} has the problem: "${this.message}"`;
   }
-  
+
   let pos = 0;
   let code = '';
   function RDP(code_in)
@@ -47,7 +47,7 @@ const colourjs = (function()
       throw new ParseFail(message, pos);
     }
   }
-  
+
   function isSpaceSeparator(c)
   {
     const Zs = ['\u0020', '\u00a0', '\u1680', '\u2000', '\u2001',
@@ -59,7 +59,7 @@ const colourjs = (function()
 
     return returnTrueOrThrow(gotIt, `the code point ${c.codePointAt(0)} is not a space separator`);
   }
-  
+
   function isWhiteSpace(c)
   {
     const wsp = ['\u0009', '\u000b', '\u000c', '\ufeff'];
@@ -133,7 +133,6 @@ const colourjs = (function()
       getChar();
       return true;
     }
-
     return false;    
   }
 
@@ -146,7 +145,6 @@ const colourjs = (function()
       comment += c;
       {c, nextc} = getChar();
     }
-
     return comment;    
   }
 
@@ -203,7 +201,27 @@ const colourjs = (function()
     }
     return {r: result, cp: codepoint};
   }
-  
+
+  function identifierName(c, nextc)
+  {
+    let name = '';
+    let {started, startChar} = isIdentifierStart(c, next);
+    if(started)
+    {
+      name += startChar;
+      let {c, nextc} = getChar();
+      let {isPart, nextPart} = isIdentifierPart(c, nextc);
+      while(isPart)
+      {
+        name += nextPart;
+        {c, nextc} = getChar();
+        {isPart, nextPart} = isIdentifierPart(c, nextc);
+      }
+      name += nextPart;
+    }
+    return name;
+  }
+
   function isIdentifierStart(c, nextc)
   {
     let str = c;
@@ -217,7 +235,21 @@ const colourjs = (function()
 
     return {gotIt: isIdentifierStartChar(c), text: str};
   }
-  
+
+  function isIdentifierPart(c, nextc)
+  {
+    let str = c;
+    if(c === '\\' && nextc =='u')
+    {
+      let {text, codePointstr} = getUnicodeEscapeSequence();
+      let codePoint = parseInt(codePointstr, 16);
+      c = String.fromCodePoint(codePoint);
+      str = text;
+    }
+
+    return {gotIt: isIdentifierPartChar(c), text: str};
+  }
+
   function isIdentifierStartChar(c)
   {
     return /^(\p{ID_Start}|\$|_)$/u.test(c);
@@ -228,6 +260,6 @@ const colourjs = (function()
     return /^(\p{ID_Continue}|\$|\u200C|\u200d)$/u.test(c);
   }
 
-  
+
   return RDP;
 })();
