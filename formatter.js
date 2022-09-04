@@ -23,6 +23,10 @@ const colourjs = (function()
                          'var', 'void', 'while', 'with', 'yield'];
 
 
+  const hexdigit_re = /^(\d|[ABCDEFabcdef])$/;
+
+  const NumericLiteralSeparator = '_';
+  
   function RDP(code_in)
   {
     code = code_in;
@@ -173,7 +177,7 @@ const colourjs = (function()
         {c, nextc} = getChar();
         while(c !== '}')
         {
-          if(/^(\d|[ABCDEFabcdef])$/.test(c))
+          if(isHexDigit(c))
           {
             result += c;
             codePoint += c;
@@ -196,7 +200,7 @@ const colourjs = (function()
         for(let i = 0; i < 4; i++)
         {
           {c, nextc} = getChar();
-          if(/^(\d|[ABCDEFabcdef])$/.test(c))
+          if(isHexDigit(c))
           {
             result += c;
             codePoint += c;
@@ -301,6 +305,66 @@ const colourjs = (function()
     return /^(\p{ID_Continue}|\$|\u200C|\u200d)$/u.test(c);
   }
 
+  function isHexDigit(c)
+  {
+    return hexdigit_re.test(c);
+  }
+
+  function hexDigits()
+  {
+    let number = '';
+    let {digit, next} = getChar();
+    if(isHexDigit(digit))
+    {
+      while(isHexDigit(digit) || digit == NumericLiteralSeparator && isHexDigit(next))
+      {
+        number += digit;
+        {digit, next} = getChar();
+      }
+    }
+    
+    return number;
+  }
+
+  function hexLiteral()
+  {
+    let number = '';
+    let {start, sep} = getChar();
+    if(start === '0' && (sep === 'x' || sep === 'X'))
+    {
+      number = start + sep;
+      number += hexDigits();
+    }
+
+    return number;
+  }
+
+  function isOctalDigit(c)
+  {
+      return /^01234567$/.test(c);
+  }
+
+  function isNonOctalDigit(c)
+  {
+    return (c === '8' || c === '9');
+  }
+
+  function legacyOctalInteger(start, digit)
+  {
+    let number = '';
+    if(start === '0' && isOctalDigit(digit))
+    {
+      number += digit;
+      let next;
+      {digit, next} = getChar();
+      while(isOctalDigit(digit))
+      {
+        number += digit;
+        {digit, next} = getChar();
+      }
+    } 
+    return number;
+  }
 
   return RDP;
 })();
