@@ -8,7 +8,7 @@ const colourjs = (function()
 
   ParseFail.prototype.toString = function()
   {
-    return `Character number ${pos} has the problem: "${this.message}"`;
+    return `Character number ${this.pos} has the problem: "${this.message}"`;
   }
 
   let pos = 0;
@@ -22,7 +22,15 @@ const colourjs = (function()
                          'switch', 'this', 'throw', 'true', 'try', 'typeof',
                          'var', 'void', 'while', 'with', 'yield'];
 
+  const otherPunctuators = ['{', '(', ')', '[', ']', '.', '...', ';', ',', '<', '>', '<=', '>=', '==', '!=', '===', '!==', '+', '-', '*', '%', '**', '++', '--', '<<', '>>', '>>>', '&', '|', '^', '!', '~', '&&', '||', '??', '?', ':', '=', '+=', '-=', '*=', '%=', '**=', '<<=', '>>=', '>>>=', '&=', '|=', '^=', '&&=', '||=', '??=', '=>'];
 
+
+  const booleanLiterals = ['true', 'false'];
+
+  const nullLiteral = 'null';
+
+  const bigIntLiteralSuffix = 'n';
+  
   const hexdigit_re = /^(\d|[ABCDEFabcdef])$/;
 
   const NumericLiteralSeparator = '_';
@@ -32,6 +40,57 @@ const colourjs = (function()
     code = code_in;
   } 
 
+  function isScript()
+  {
+    if(code.length > 0)
+    {
+      return isScriptBody();
+    }
+    return true;
+  }
+
+  function isScriptBody()
+  {
+    return isStatementList();
+  }
+
+  function isStatementList()
+  {
+    return isStatementItem() || (isStatementList() && isStatementItem());
+  }
+
+  function isStatementItem()
+  {
+    return isStatement() || isDeclaration();
+  }
+
+  function isStatement()
+  {
+BlockStatement[?Yield, ?Await, ?Return]
+VariableStatement[?Yield, ?Await]
+EmptyStatement
+ExpressionStatement[?Yield, ?Await]
+IfStatement[?Yield, ?Await, ?Return]
+BreakableStatement[?Yield, ?Await, ?Return]
+ContinueStatement[?Yield, ?Await]
+BreakStatement[?Yield, ?Await]
+[+Return] ReturnStatement[?Yield, ?Await]
+WithStatement[?Yield, ?Await, ?Return]
+LabelledStatement[?Yield, ?Await, ?Return]
+ThrowStatement[?Yield, ?Await]
+TryStatement[?Yield, ?Await, ?Return]
+DebuggerStatement
+
+  }
+
+  function isDeclaration()
+  {
+     HoistableDeclaration[?Yield, ?Await, ~Default]
+ClassDeclaration[?Yield, ?Await, ~Default]
+LexicalDeclaration[+In, ?Yield, ?Await]
+
+  }
+  
   function getChar()
   {
     if(pos < code.length-3)
@@ -303,6 +362,17 @@ const colourjs = (function()
   function isIdentifierPartChar(c)
   {
     return /^(\p{ID_Continue}|\$|\u200C|\u200d)$/u.test(c);
+  }
+
+  function isOtherPunctuator()
+  {
+    throw new Error('haven\'t writen this yet');
+  }
+
+  function isNumericLiteral()
+  {
+    let isNumeric = false;
+    return isNumeric;
   }
 
   function isHexDigit(c)
