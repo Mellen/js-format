@@ -66,23 +66,311 @@ const colourjs = (function()
 
   function isStatement()
   {
-BlockStatement[?Yield, ?Await, ?Return]
-VariableStatement[?Yield, ?Await]
-EmptyStatement
-ExpressionStatement[?Yield, ?Await]
-IfStatement[?Yield, ?Await, ?Return]
-BreakableStatement[?Yield, ?Await, ?Return]
-ContinueStatement[?Yield, ?Await]
-BreakStatement[?Yield, ?Await]
-[+Return] ReturnStatement[?Yield, ?Await]
-WithStatement[?Yield, ?Await, ?Return]
-LabelledStatement[?Yield, ?Await, ?Return]
-ThrowStatement[?Yield, ?Await]
-TryStatement[?Yield, ?Await, ?Return]
-DebuggerStatement
+    let result = false;
+    let lastPos = pos;
+    if(isBlockStatement())
+    {
+      result = true;
+    }
+    else
+    {
+      pos = lastPos;
+    }
+    
+    if(!result)
+    {
+      if(isVariableStatement())
+      {
+        result = true;
+      }
+      else
+      {
+        pos = lastPos;
+      }
+    }
 
+    if(!result)
+    {
+      if(isEmptyStatement())
+      {
+        result = true;
+      }
+      else
+      {
+        pos = lastPos;
+      }
+    }
+
+    if(!result)
+    {
+      if(isExpressionStatement())
+      {
+        result = true;
+      }
+      else
+      {
+        pos = lastPos;
+      }
+    }
+
+    if(!result)
+    {
+      if(isIfStatement())
+      {
+        result = true;
+      }
+      else
+      {
+        pos = lastPos;
+      }
+    }
+
+    if(!result)
+    {
+      if(isBreakableStatement())
+      {
+        result = true;
+      }
+      else
+      {
+        pos = lastPos;
+      }
+    }
+
+    if(!result)
+    {
+      if(isContinueStatement())
+      {
+        result = true;
+      }
+      else
+      {
+        pos = lastPos;
+      }
+    }
+
+    if(!result)
+    {
+      if(isBreakStatement())
+      {
+        result = true;
+      }
+      else
+      {
+        pos = lastPos;
+      }
+    }
+
+    if(!result)
+    {
+      if(isReturnStatement())
+      {
+        result = true;
+      }
+      else
+      {
+        pos = lastPos;
+      }
+    }
+
+    if(!result)
+    {
+      if(WithStatement())
+      {
+        result = true;
+      }
+      else
+      {
+        pos = lastPos;
+      }
+    }
+
+    if(!result)
+    {
+      if(isLabelledStatement())
+      {
+        result = true;
+      }
+      else
+      {
+        pos = lastPos;
+      }
+    }
+
+    if(!result)
+    {
+      if(isThrowStatement())
+      {
+        result = true;
+      }
+      else
+      {
+        pos = lastPos;
+      }
+    }
+
+    if(!result)
+    {
+      if(isTryStatement())
+      {
+        result = true;
+      }
+      else
+      {
+        pos = lastPos;
+      }
+    }
+
+    if(!result)
+    {
+      if(isDebuggerStatement())
+      {
+        result = true;
+      }
+      else
+      {
+        pos = lastPos;
+      }
+    }
+
+    return result;
   }
 
+  function isVariableStatement()
+  {
+    let c = '';
+    let nextc = '';
+    let result = true;
+    try
+    {
+      c = getFirstNonWhiteSpaceChar();
+    }
+    catch (error)
+    {
+      if(error instanceof ParseFail)
+      {
+        result = false;
+      }
+    }
+
+    if(c === 'v')
+    {
+      {c, nextc} = getChar();
+      if(c === 'a')
+      {
+        {c, nextc} = getChar();
+        if(c === 'r')
+        {
+          result = isVariableDeclarationList();
+        }
+      }
+      else
+      {
+        result = false;
+      }
+    }
+    else
+    {
+      result = false;
+    }
+    return result;
+  }
+
+  function isVariableDeclarationList()
+  {
+    let result = false;
+    let lastPos = pos;
+
+    if(isVariableDeclaration())
+    {
+      result = true;
+    }
+    else
+    {
+      pos = lastPos;
+    }
+
+    if(!result && isVariableDeclarationList())
+    {
+      result = true;
+    }
+    
+    return result;
+  }
+
+  function isVariableDeclaration()
+  {
+     BindingIdentifier[?Yield, ?Await] Initializer[?In, ?Yield, ?Await]opt
+BindingPattern[?Yield, ?Await] Initializer[?In, ?Yield, ?Await] 
+  }
+
+  function isBlockStatement()
+  {
+    return isBlock();
+  }
+
+  function isBlock()
+  {
+    let c = ''
+    let result = true;
+    try
+    {
+      c = getFirstNonWhiteSpaceChar();
+    }
+    catch (error)
+    {
+      if(error instanceof ParseFail)
+      {
+        result = false;
+      }
+    }
+
+    if(c !== '{')
+    {
+      result = false;
+    }
+    else
+    {
+      try
+      {
+        c = getFirstNonWhiteSpaceChar();
+      }
+      catch (error)
+      {
+        if(error instanceof ParseFail)
+        {
+          result = false;
+        }
+      }
+
+      if(result)
+      {
+        if(c !== '}')
+        {
+          result = isStatementList();
+        }
+        if(result)
+        {
+          try
+          {
+            c = getFirstNonWhiteSpaceChar();
+          }
+          catch (error)
+          {
+            if(error instanceof ParseFail)
+            {
+              result = false;
+            }
+          }
+
+          result = c === '}';
+        }
+      }      
+    }
+
+    return result;
+  }
+  
   function isDeclaration()
   {
      HoistableDeclaration[?Yield, ?Await, ~Default]
@@ -131,6 +419,33 @@ LexicalDeclaration[+In, ?Yield, ?Await]
     let gotIt = Zs.includes(c);
 
     return returnTrueOrThrow(gotIt, `the code point ${c.codePointAt(0)} is not a space separator`);
+  }
+
+  function getFirstNonWhiteSpaceChar()
+  {
+    let {c, nextc} = getChar();
+    let fnwc = c;
+    try
+    {
+      while(isWhiteSpace(c))
+      {
+        {c, nextc} = getChar();
+      }
+    }
+    catch (error)
+    {
+      if(error instanceOf ParseFail)
+      {
+        fnwc = c;
+      }
+    }
+
+    if(c === '')
+    {
+      throw new ParseFail('There is no non-white-space character in the stream.', pos);
+    }
+    
+    return fnwc;
   }
 
   function isWhiteSpace(c)
